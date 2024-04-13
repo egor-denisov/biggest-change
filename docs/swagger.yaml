@@ -1,0 +1,45 @@
+basePath: /api/v1 .
+definitions:
+  entity.BiggestChange:
+    description: Наибольшее изменение .
+    properties:
+      address:
+        type: string
+      amount:
+        type: string
+      countOfBlocks:
+        type: integer
+      isRecieved:
+        type: boolean
+      lastBlock:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  title: Stats Of Changing
+  version: "1.0"
+paths:
+  /get_biggest_change:
+    get:
+      description: |-
+        Получение адреса, который максимально изменился за count_of_blocks блоков
+        По умолчанию count_of_blocks = 100
+      parameters:
+      - description: Количество последних блоков
+        in: query
+        name: count_of_blocks
+        type: integer
+      responses:
+        "200":
+          description: Адрес найден
+          schema:
+            $ref: '#/definitions/entity.BiggestChange'
+        "400":
+          description: Ошибка в запросе
+        "500":
+          description: Таймаут запроса
+      summary: Получение адреса, который максимально
+      tags:
+      - StatsOfChanging
+swagger: "2.0"

@@ -1,0 +1,66 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Stats Of Changing",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1 .",
+    "paths": {
+        "/get_biggest_change": {
+            "get": {
+                "description": "Получение адреса, который максимально изменился за count_of_blocks блоков\nПо умолчанию count_of_blocks = 100",
+                "tags": [
+                    "StatsOfChanging"
+                ],
+                "summary": "Получение адреса, который максимально",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Количество последних блоков",
+                        "name": "count_of_blocks",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Адрес найден",
+                        "schema": {
+                            "$ref": "#/definitions/entity.BiggestChange"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка в запросе"
+                    },
+                    "500": {
+                        "description": "Таймаут запроса"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "entity.BiggestChange": {
+            "description": "Наибольшее изменение .",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "string"
+                },
+                "countOfBlocks": {
+                    "type": "integer"
+                },
+                "isRecieved": {
+                    "type": "boolean"
+                },
+                "lastBlock": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

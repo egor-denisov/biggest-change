@@ -1,0 +1,67 @@
+linters-settings:
+  varnamelen:
+    min-name-length: 2
+    max-distance: 20
+  nlreturn:
+    # Size of the block (including return statement that is still "OK")
+    # so no return split required.
+    # Default: 1
+    block-size: 2
+  # errcheck:
+  #   check-type-assertions: true
+  # goconst:
+  #   min-len: 2
+  #   min-occurrences: 3
+  # gocritic:
+  #   enabled-tags:
+  #     - diagnostic
+  #     - experimental
+  #     - opinionated
+  #     - performance
+  #     - style
+  govet:
+  #   check-shadowing: true
+  #   enable:
+  #     - fieldalignment
+  depguard:
+      rules:
+        # Name of a rule.
+        main:
+          allow:
+            - $gostd
+            - github.com/egor-denisov/
+            - github.com/ilyakaznacheev/cleanenv
+            - github.com/joho/godotenv
+            - github.com/go-playground/assert
+            - github.com/gin-gonic/gin
+            - github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging
+            - github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery
+            - github.com/prometheus/client_golang/prometheus/promhttp
+            - github.com/swaggo/files
+            - github.com/swaggo/gin-swagger
+            - github.com/hashicorp/golang-lru
+            - "github.com/gorilla/mux"
+            - "github.com/gorilla/rpc"
+            - "github.com/gorilla/rpc/json"
+            - "github.com/golang/mock/gomock"
+
+  wsl:
+    force-err-cuddling: true
+  nolintlint:
+    require-explanation: true
+    require-specific: true
+  funlen:
+    lines: 80
+    ignore-comments: true
+
+linters:
+  enable-all: true
+  disable:
+    - goimports
+    - testpackage
+    - gci
+    - gofmt
+    - gofumpt
+
+run:
+  issues-exit-code: 1

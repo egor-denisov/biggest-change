@@ -1,0 +1,13 @@
+app:
+  name: "biggest-change"
+  version: "1.0.0"
+
+api:
+  rps: 60
+
+http:
+  port: ":8080"
+  timeout: 10s
+
+logger:
+  logLevel: "debug"
