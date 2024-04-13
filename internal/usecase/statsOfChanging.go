@@ -68,18 +68,15 @@ func (w *StatsOfChangingUseCase) getAddressChangeMap(
 
 	pool := make(chan struct{}, _maxGoroutines)
 
-	// ticker := time.NewTicker(20000 * time.Microsecond)
-	// defer ticker.Stop()
-
 	wg.Add(countOfLastBlocks)
 
 	// Starting from oldest blocks for store earliest blocks
 	firstBlock := new(big.Int).Sub(currentBlock, big.NewInt(int64(countOfLastBlocks-1)))
+
 	// Launching goroutines pool
 	// where we process addresses with changes to each block and
 	// calculate the total value in addresses map.
 	for i := 0; i < countOfLastBlocks; i++ {
-		// <-ticker.C
 		pool <- struct{}{}
 
 		go func(offset int) {
@@ -112,7 +109,7 @@ func (w *StatsOfChangingUseCase) getAddressChangeMap(
 	}
 	wg.Wait()
 
-	// close(pool)
+	close(pool)
 	close(errCh)
 
 	// When all goroutines is done, we checking channel with errors.
