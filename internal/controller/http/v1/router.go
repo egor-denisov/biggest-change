@@ -20,7 +20,8 @@ import (
 // @title       Stats Of Changing
 // @version     1.0
 // @host        localhost:8080
-// @BasePath    /api/v1 .
+// @BasePath    /api/v1
+// .
 func NewRouter(handler *gin.Engine, l *slog.Logger, sc usecase.StatsOfChanging) {
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
