@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -88,17 +89,28 @@ var tests_getBiggestChange = []struct {
 		expectedResponseBody: `{"address":"0x1","amount":"0x100","lastBlock":"0x123","countOfBlocks":100,"isRecieved":true}`,
 	},
 	{
-		name:                 "Something went wrong",
+		name:                 "Bad request",
 		query:                `?count_of_blocks=hello`,
 		mockBehavior:         func(m *mock.MockStatsOfChanging) {},
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedResponseBody: ``,
 	},
 	{
-		name:  "Something went wrong",
-		query: `?count_of_blocks=10`,
+		name:  "Timeout",
+		query: ``,
 		mockBehavior: func(m *mock.MockStatsOfChanging) {
-			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(10)).Return(nil, errSomethingWentWrong)
+			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(_defaultCountOfBlocks)).
+				Return(nil, context.DeadlineExceeded)
+		},
+		expectedStatusCode:   http.StatusGatewayTimeout,
+		expectedResponseBody: ``,
+	},
+	{
+		name:  "Something went wrong",
+		query: ``,
+		mockBehavior: func(m *mock.MockStatsOfChanging) {
+			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(_defaultCountOfBlocks)).
+				Return(nil, errSomethingWentWrong)
 		},
 		expectedStatusCode:   http.StatusInternalServerError,
 		expectedResponseBody: ``,

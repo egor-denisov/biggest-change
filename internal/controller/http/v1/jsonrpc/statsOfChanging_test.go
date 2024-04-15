@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -115,7 +116,7 @@ var tests_GetBiggestChange = []struct {
 		name:        "Timeout Error Handling",
 		requestBody: getBodyRequestByCountOfBlock(10),
 		mockBehavior: func(m *mock.MockStatsOfChanging) {
-			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(10)).Return(nil, entity.ErrProcessTimeout)
+			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(10)).Return(nil, context.DeadlineExceeded)
 		},
 		expectedResponseBody: `{"result":null,"error":"process timeout","id":"1"}`,
 	},

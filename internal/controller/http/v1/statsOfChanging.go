@@ -1,11 +1,11 @@
 package v1
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
 
-	"github.com/egor-denisov/biggest-change/internal/entity"
 	"github.com/egor-denisov/biggest-change/internal/usecase"
 	sl "github.com/egor-denisov/biggest-change/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -57,7 +57,7 @@ func (r *statsOfChangingRoutes) getBiggestChange(c *gin.Context) {
 
 	res, err := r.sc.GetAddressWithBiggestChange(c.Request.Context(), input.CountOfBlocks)
 	if err != nil {
-		if errors.Is(err, entity.ErrProcessTimeout) {
+		if errors.Is(err, context.DeadlineExceeded) {
 			c.AbortWithStatus(http.StatusGatewayTimeout)
 
 			return

@@ -1,6 +1,7 @@
 package jsonrpc
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -36,7 +37,7 @@ func (s *StatsOfChangingService) GetBiggestChange(
 
 	res, err := s.sc.GetAddressWithBiggestChange(r.Context(), args.CountOfBlocks)
 	if err != nil {
-		if errors.Is(err, entity.ErrProcessTimeout) {
+		if errors.Is(err, context.DeadlineExceeded) {
 			return entity.ErrProcessTimeout
 		}
 
