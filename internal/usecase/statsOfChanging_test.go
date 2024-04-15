@@ -88,13 +88,17 @@ var tests_GetAddressWithBiggestChange = []struct {
 		name: "Zero Blocks",
 		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, countOfBlocks uint) {
 			m.EXPECT().GetCurrentBlockNumber(context.Background()).Return(big.NewInt(200), nil)
+			for i := uint(0); i < _defaultCountOfBlocks; i++ {
+				blockNum := big.NewInt(200 - int64(i))
+				m.EXPECT().GetTransactionsByBlockNumber(gomock.Any(), blockNum).Return(nil, nil)
+			}
 		},
 		countOfBlocks: 0,
 		expectedResult: &entity.BiggestChange{
 			Amount:        "0x0",
 			IsRecieved:    false,
 			LastBlock:     "0xc8",
-			CountOfBlocks: 0,
+			CountOfBlocks: int64(_defaultCountOfBlocks),
 		},
 		expectedError: nil,
 	},

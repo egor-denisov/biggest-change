@@ -80,10 +80,10 @@ var tests_getBiggestChange = []struct {
 				Address:       "0x1",
 				Amount:        "0x100",
 				LastBlock:     "0x123",
-				CountOfBlocks: int64(_defaultCountOfBlocks),
+				CountOfBlocks: int64(100),
 				IsRecieved:    true,
 			}
-			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), _defaultCountOfBlocks).Return(res, nil)
+			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(0)).Return(res, nil)
 		},
 		expectedStatusCode:   http.StatusOK,
 		expectedResponseBody: `{"address":"0x1","amount":"0x100","lastBlock":"0x123","countOfBlocks":100,"isRecieved":true}`,
@@ -99,7 +99,7 @@ var tests_getBiggestChange = []struct {
 		name:  "Timeout",
 		query: ``,
 		mockBehavior: func(m *mock.MockStatsOfChanging) {
-			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(_defaultCountOfBlocks)).
+			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(0)).
 				Return(nil, context.DeadlineExceeded)
 		},
 		expectedStatusCode:   http.StatusGatewayTimeout,
@@ -109,7 +109,7 @@ var tests_getBiggestChange = []struct {
 		name:  "Something went wrong",
 		query: ``,
 		mockBehavior: func(m *mock.MockStatsOfChanging) {
-			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(_defaultCountOfBlocks)).
+			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(0)).
 				Return(nil, errSomethingWentWrong)
 		},
 		expectedStatusCode:   http.StatusInternalServerError,

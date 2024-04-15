@@ -10,25 +10,47 @@ import (
 	"github.com/egor-denisov/biggest-change/pkg/limiter"
 )
 
-var _defaultTimeWindow = 1000 * time.Millisecond
-var _defaultTimeout = 15 * time.Second
+const (
+	_defaultRequestCountRPS    = 60
+	_defaultTimeWindowRPS      = 1 * time.Second
+	_defaultTimeout            = 15 * time.Second
+	_defaultMaxRetries         = 5
+	_defaultTimeBetweenRetries = 500 * time.Millisecond
+)
 
 type StatsOfChangingWebAPI struct {
-	URL     string
-	Client  *http.Client
-	Limiter *limiter.RPSLimiter
+	url                string
+	client             *http.Client
+	limiter            *limiter.RPSLimiter
+	requestCountRPS    int
+	timeWindowRPS      time.Duration
+	timeout            time.Duration
+	maxRetries         int
+	timeBetweenRetries time.Duration
 }
 
-func New(URL string, rps int) *StatsOfChangingWebAPI {
-	if !isValidUrl(URL) {
-		panic("invalid getblock.io url: " + URL)
+func New(url string, opts ...Option) *StatsOfChangingWebAPI {
+	if !isValidUrl(url) {
+		panic("invalid getblock.io url: " + url)
 	}
 
-	return &StatsOfChangingWebAPI{
-		URL:     URL,
-		Client:  &http.Client{},
-		Limiter: limiter.NewRPSLimiter(rps, _defaultTimeWindow),
+	w := &StatsOfChangingWebAPI{
+		url:                url,
+		client:             &http.Client{},
+		requestCountRPS:    _defaultRequestCountRPS,
+		timeWindowRPS:      _defaultTimeWindowRPS,
+		timeout:            _defaultTimeout,
+		maxRetries:         _defaultMaxRetries,
+		timeBetweenRetries: _defaultTimeBetweenRetries,
 	}
+
+	for _, opt := range opts {
+		opt(w)
+	}
+
+	w.limiter = limiter.NewRPSLimiter(w.requestCountRPS, w.timeWindowRPS)
+
+	return w
 }
 
 // Getting transactions by block number from getblock.io.
@@ -36,7 +58,7 @@ func (w *StatsOfChangingWebAPI) GetTransactionsByBlockNumber(
 	ctx context.Context,
 	blockNumber *big.Int,
 ) ([]*entity.Transaction, error) {
-	ctx, cancel := context.WithTimeout(ctx, _defaultTimeout)
+	ctx, cancel := context.WithTimeout(ctx, w.timeout)
 	defer cancel()
 
 	return w.getTransactionsByBlockNumber(ctx, blockNumber)
@@ -44,7 +66,7 @@ func (w *StatsOfChangingWebAPI) GetTransactionsByBlockNumber(
 
 // Getting current block number from getblock.io.
 func (w *StatsOfChangingWebAPI) GetCurrentBlockNumber(ctx context.Context) (*big.Int, error) {
-	ctx, cancel := context.WithTimeout(ctx, _defaultTimeout)
+	ctx, cancel := context.WithTimeout(ctx, w.timeout)
 	defer cancel()
 
 	return w.getCurrentBlockNumber(ctx)

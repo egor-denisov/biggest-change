@@ -24,13 +24,21 @@ type (
 	}
 
 	App struct {
-		Name    string `env:"APP_NAME"    env-default:"biggest-change" yaml:"name"`
-		Version string `env:"APP_VERSION" env-default:"1.0.0"          yaml:"version"`
+		Name                    string `env:"APP_NAME"            env-default:"biggest-change" yaml:"name"`
+		Version                 string `env:"APP_VERSION"         env-default:"1.0.0"          yaml:"version"`
+		DefaultCountOfBlocks    uint   `env:"APP_COUNT_OF_BLOCKS" env-default:"100"            yaml:"countOfBlocks"`
+		MaxGoroutines           int    `env:"APP_MAX_GOROUTINES"  env-default:"50"             yaml:"maxGoroutines"`
+		AverageAddressesInBlock int    `env:"APP_AVG_ADDRS"       env-default:"200"            yaml:"averageAddressesInBlock"`
+		CacheSize               int    `env:"APP_CACHE_SIZE"      env-default:"100"            yaml:"cacheSize"`
 	}
 
 	API struct {
-		Url string `env:"API_URL" env-default:""   yaml:"url"`
-		Rps int    `env:"API_RPS" env-default:"60" yaml:"rps"`
+		Url                string        `env:"API_URL"                  env-default:""      yaml:"url"`
+		Rps                int           `env:"API_RPS"                  env-default:"60"    yaml:"rps"`
+		TimeWindowRPS      time.Duration `env:"API_TIME_WINDOW_RPS"      env-default:"1s"    yaml:"timewindow"`
+		Timeout            time.Duration `env:"API_TIMEOUT"              env-default:"5s"    yaml:"timeout"`
+		MaxRetries         int           `env:"API_MAX_RETRIES"          env-default:"5"     yaml:"maxRetries"`
+		TimeBetweenRetries time.Duration `env:"API_TIME_BETWEEN_RETRIES" env-default:"500ms" yaml:"timeBetweenRetries"`
 	}
 
 	HTTP struct {

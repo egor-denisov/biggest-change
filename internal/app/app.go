@@ -20,10 +20,25 @@ func New(
 	log *slog.Logger,
 	cfg *config.Config,
 ) *App {
+	// Web api
+	api := webapi.New(
+		cfg.API.Url,
+		webapi.RequestCountRPS(cfg.API.Rps),
+		webapi.TimeWindowRPS(cfg.API.TimeWindowRPS),
+		webapi.Timeout(cfg.API.Timeout),
+		webapi.MaxRetries(cfg.API.MaxRetries),
+		webapi.TimeBetweenRetries(cfg.API.TimeBetweenRetries),
+	)
+
 	// Use case
 	statsOfChangingUseCase := usecase.New(
-		webapi.New(cfg.API.Url, cfg.API.Rps),
+		api,
+		usecase.CacheSize(cfg.App.CacheSize),
+		usecase.MaxGoroutines(cfg.App.MaxGoroutines),
+		usecase.AverageAddressCountInBlock(cfg.App.AverageAddressesInBlock),
+		usecase.DefaultCountOfBlocks(cfg.App.DefaultCountOfBlocks),
 	)
+
 	// Init http server
 	handler := gin.New()
 	v1.NewRouter(handler, log, statsOfChangingUseCase)

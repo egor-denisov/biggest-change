@@ -11,8 +11,6 @@ import (
 	sl "github.com/egor-denisov/biggest-change/pkg/logger"
 )
 
-var _defaultCountOfBlocks uint = 100
-
 type StatsOfChangingService struct {
 	l  *slog.Logger
 	sc usecase.StatsOfChanging
@@ -31,10 +29,6 @@ func (s *StatsOfChangingService) GetBiggestChange(
 	args *GetBiggestChangeArgs,
 	result *GetBiggestChangeResult,
 ) error {
-	if args.CountOfBlocks == 0 {
-		args.CountOfBlocks = _defaultCountOfBlocks
-	}
-
 	res, err := s.sc.GetAddressWithBiggestChange(r.Context(), args.CountOfBlocks)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {

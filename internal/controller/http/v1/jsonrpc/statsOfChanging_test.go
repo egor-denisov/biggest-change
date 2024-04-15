@@ -104,10 +104,10 @@ var tests_GetBiggestChange = []struct {
 				Address:       "0x1",
 				Amount:        "0x100",
 				LastBlock:     "0x123",
-				CountOfBlocks: int64(_defaultCountOfBlocks),
+				CountOfBlocks: int64(100),
 				IsRecieved:    true,
 			}
-			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), _defaultCountOfBlocks).Return(result, nil)
+			m.EXPECT().GetAddressWithBiggestChange(gomock.Any(), uint(0)).Return(result, nil)
 		},
 		expectedResponseBody: `{"result":{"address":"0x1","amount":"0x100","lastBlock":"0x123",` +
 			`"countOfBlocks":100,"isRecieved":true},"error":null,"id":"1"}`,

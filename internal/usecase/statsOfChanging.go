@@ -10,47 +10,66 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
-var _maxGoroutines = 50
-var _averageAddressCountInBlock = 200
-var _cacheSize = 100 // Count of blocks for which the transaction value will be cached
+const (
+	_defaultMaxGoroutines                   = 50
+	_defaultAverageAddressCountInBlock      = 200
+	_defaultCacheSize                       = 100 // Count of blocks for which the transaction value will be cached
+	_defaultCountOfBlocks              uint = 100
+)
 
 type StatsOfChangingUseCase struct {
-	webAPI StatsOfChangingWebAPI
-	cache  *lru.Cache
+	webAPI                     StatsOfChangingWebAPI
+	cache                      *lru.Cache
+	cacheSize                  int
+	maxGoroutines              int
+	averageAddressCountInBlock int
+	countOfBlocks              uint
 }
 
-func New(w StatsOfChangingWebAPI) *StatsOfChangingUseCase {
-	cache, _ := lru.New(_cacheSize)
-
-	return &StatsOfChangingUseCase{
-		webAPI: w,
-		cache:  cache,
+func New(w StatsOfChangingWebAPI, opts ...Option) *StatsOfChangingUseCase {
+	uc := &StatsOfChangingUseCase{
+		webAPI:                     w,
+		cacheSize:                  _defaultCacheSize,
+		maxGoroutines:              _defaultMaxGoroutines,
+		averageAddressCountInBlock: _defaultAverageAddressCountInBlock,
+		countOfBlocks:              _defaultCountOfBlocks,
 	}
+
+	for _, opt := range opts {
+		opt(uc)
+	}
+
+	uc.cache, _ = lru.New(uc.cacheSize)
+
+	return uc
 }
 
 // Get address with biggest change in last countOfLastBlocks blocks.
-func (w *StatsOfChangingUseCase) GetAddressWithBiggestChange(
+func (uc *StatsOfChangingUseCase) GetAddressWithBiggestChange(
 	ctx context.Context,
 	countOfLastBlocks uint,
 ) (*entity.BiggestChange, error) {
+	if countOfLastBlocks == 0 {
+		countOfLastBlocks = uc.countOfBlocks
+	}
 	// Getting current number of block.
-	currentBlock, err := w.webAPI.GetCurrentBlockNumber(ctx)
+	currentBlock, err := uc.webAPI.GetCurrentBlockNumber(ctx)
 	if err != nil {
 		return nil,
-			fmt.Errorf("StatsOfChangingUseCase - GetAddressWithBiggestChange - w.webAPI.GetCurrentBlockNumber: %w", err)
+			fmt.Errorf("StatsOfChangingUseCase - GetAddressWithBiggestChange - uc.webAPI.GetCurrentBlockNumber: %w", err)
 	}
 	// Getting map which store addresses and changes in last countOfLastBlocks blocks.
-	addresses, err := w.getAddressChangeMap(ctx, currentBlock, int(countOfLastBlocks))
+	addresses, err := uc.getAddressChangeMap(ctx, currentBlock, int(countOfLastBlocks))
 	if err != nil {
 		return nil,
 			fmt.Errorf("StatsOfChangingUseCase - GetAddressWithBiggestChange - getAddressChangeMap: %w", err)
 	}
 	// Returning result of finding address with biggest changing.
-	return w.getMaxChanging(addresses, currentBlock, int64(countOfLastBlocks)), nil
+	return uc.getMaxChanging(addresses, currentBlock, int64(countOfLastBlocks)), nil
 }
 
 // Get map which store addresses and changes in last countOfLastBlocks blocks.
-func (w *StatsOfChangingUseCase) getAddressChangeMap(
+func (uc *StatsOfChangingUseCase) getAddressChangeMap(
 	ctx context.Context,
 	currentBlock *big.Int,
 	countOfLastBlocks int,
@@ -64,9 +83,9 @@ func (w *StatsOfChangingUseCase) getAddressChangeMap(
 
 	var mutex sync.Mutex
 
-	addresses := make(map[string]*big.Int, _averageAddressCountInBlock*countOfLastBlocks)
+	addresses := make(map[string]*big.Int, uc.averageAddressCountInBlock*countOfLastBlocks)
 
-	pool := make(chan struct{}, _maxGoroutines)
+	pool := make(chan struct{}, uc.maxGoroutines)
 
 	wg.Add(countOfLastBlocks)
 
@@ -87,7 +106,7 @@ func (w *StatsOfChangingUseCase) getAddressChangeMap(
 
 			// Get addresses with changes by blockNumber.
 			// If we get error, sending it in errCh and cancelling context.
-			chs, err := w.getAddressWithChanges(ctx, blockNumber)
+			chs, err := uc.getAddressWithChanges(ctx, blockNumber)
 			if err != nil {
 				errCh <- err
 
@@ -127,25 +146,25 @@ func (w *StatsOfChangingUseCase) getAddressChangeMap(
 }
 
 // Getting addresses with changes by number of block.
-func (w *StatsOfChangingUseCase) getAddressWithChanges(
+func (uc *StatsOfChangingUseCase) getAddressWithChanges(
 	ctx context.Context,
 	blockNumber *big.Int,
 ) (map[string]*big.Int, error) {
 	// Trying to get values from cache
-	if cachedResult, ok := w.cache.Get(blockNumber.String()); ok {
+	if cachedResult, ok := uc.cache.Get(blockNumber.String()); ok {
 		res, ok := cachedResult.(map[string]*big.Int)
 		if ok {
 			return res, nil
 		}
 	}
 
-	chs := make(map[string]*big.Int, _averageAddressCountInBlock)
+	chs := make(map[string]*big.Int, uc.averageAddressCountInBlock)
 
 	// Making request to web api
-	trs, err := w.webAPI.GetTransactionsByBlockNumber(ctx, blockNumber)
+	trs, err := uc.webAPI.GetTransactionsByBlockNumber(ctx, blockNumber)
 	if err != nil {
 		return nil,
-			fmt.Errorf("StatsOfChangingUseCase - getAddressWithChanges - w.webAPI.GetTransactionsByBlockNumber: %w", err)
+			fmt.Errorf("StatsOfChangingUseCase - getAddressWithChanges - uc.webAPI.GetTransactionsByBlockNumber: %w", err)
 	}
 
 	// Calculating amount that the sender spent and receiver got
@@ -165,13 +184,13 @@ func (w *StatsOfChangingUseCase) getAddressWithChanges(
 		chs[t.To] = new(big.Int).Add(chs[t.To], t.Value)
 	}
 	// Adding value in cache
-	w.cache.Add(blockNumber.String(), chs)
+	uc.cache.Add(blockNumber.String(), chs)
 
 	return chs, nil
 }
 
 // Getting max change in map with addresses and them changing.
-func (w *StatsOfChangingUseCase) getMaxChanging(
+func (uc *StatsOfChangingUseCase) getMaxChanging(
 	addresses map[string]*big.Int,
 	currentBlock *big.Int,
 	countOfLastBlocks int64,

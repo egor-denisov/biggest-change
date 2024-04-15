@@ -11,8 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var _defaultCountOfBlocks uint = 100
-
 type statsOfChangingRoutes struct {
 	sc usecase.StatsOfChanging
 	l  *slog.Logger
@@ -49,10 +47,6 @@ func (r *statsOfChangingRoutes) getBiggestChange(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 
 		return
-	}
-
-	if input.CountOfBlocks == 0 {
-		input.CountOfBlocks = _defaultCountOfBlocks
 	}
 
 	res, err := r.sc.GetAddressWithBiggestChange(c.Request.Context(), input.CountOfBlocks)

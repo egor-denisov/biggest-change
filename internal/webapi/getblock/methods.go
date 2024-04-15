@@ -14,28 +14,32 @@ import (
 	"github.com/egor-denisov/biggest-change/internal/entity"
 )
 
-var _defaultMaxRetries = 5
-var _defaultTimeBetweenRetries = 500 * time.Millisecond
-
 // Checking validity of url.
 func isValidUrl(url string) bool {
 	return strings.HasPrefix(url, "https://go.getblock.io/")
 }
 
 // Trying making retry requests .
-func (w *StatsOfChangingWebAPI) retryRequest(request *http.Request, response interface{}) (err error) {
-	for i := 0; i < _defaultMaxRetries; i++ {
-		w.Limiter.WaitForAvailability()
+func (w *StatsOfChangingWebAPI) retryRequest(ctx context.Context, body *bytes.Buffer, response interface{}) (err error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, w.url, body)
+	if err != nil {
+		return fmt.Errorf("StatsOfChangingWebAPI - retryRequest: %w", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+
+	for i := 0; i < w.maxRetries; i++ {
+		w.limiter.WaitForAvailability()
 
 		// If context is done, return error and decrease limiter counter
 		select {
 		case <-request.Context().Done():
-			w.Limiter.Rollback()
+			w.limiter.Rollback()
 			return request.Context().Err()
 		default:
 		}
 
-		resp, err := w.Client.Do(request)
+		resp, err := w.client.Do(request)
 		if err != nil {
 			return err
 		}
@@ -48,7 +52,7 @@ func (w *StatsOfChangingWebAPI) retryRequest(request *http.Request, response int
 		}
 
 		// If empty body, trying again
-		time.Sleep(_defaultTimeBetweenRetries)
+		time.Sleep(w.timeBetweenRetries)
 	}
 
 	if err == io.EOF {
@@ -86,17 +90,9 @@ func (w *StatsOfChangingWebAPI) getTransactionsByBlockNumber(
 			fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - getBlockByNumberBuildRequestBody: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, w.URL, body)
-	if err != nil {
-		return nil,
-			fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - http.NewRequestWithContext: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
 	response := getBlockByNumberResponse{}
 
-	if err := w.retryRequest(req, &response); err != nil {
+	if err := w.retryRequest(ctx, body, &response); err != nil {
 		return nil,
 			fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - w.retryRequest: %w", err)
 	}
@@ -161,17 +157,9 @@ func (w *StatsOfChangingWebAPI) getCurrentBlockNumber(
 			fmt.Errorf("StatsOfChangingWebAPI - getCurrentBlockNumber - blockNumberBuildRequestBody: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, w.URL, body)
-	if err != nil {
-		return nil,
-			fmt.Errorf("StatsOfChangingWebAPI - getCurrentBlockNumber - http.NewRequestWithContext: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
 	response := blockNumberResponse{}
 
-	if err := w.retryRequest(req, &response); err != nil {
+	if err := w.retryRequest(ctx, body, &response); err != nil {
 		return nil,
 			fmt.Errorf("StatsOfChangingWebAPI - getCurrentBlockNumber - w.retryRequest: %w", err)
 	}

@@ -1,9 +1,17 @@
 app:
   name: "biggest-change"
   version: "1.0.0"
+  countOfBlocks: 100
+  maxGoroutines: 50
+  averageAddressesInBlock: 200
+  cacheSize: 100
 
 api:
   rps: 60
+  timewindow: 1s
+  timeout: 15s
+  maxRetries: 5
+  timeBetweenRetries: 500ms
 
 http:
   port: ":8080"
