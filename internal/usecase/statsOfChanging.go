@@ -91,21 +91,27 @@ func (w *StatsOfChangingUseCase) getAddressChangeMap(
 			if err != nil {
 				errCh <- err
 
-				cancel()
-
 				return
 			}
 			// Adding new change into addresses.
+			mutex.Lock()
 			for addr, change := range chs {
-				mutex.Lock()
 				if addresses[addr] == nil {
 					addresses[addr] = new(big.Int)
 				}
 
 				addresses[addr] = new(big.Int).Add(addresses[addr], change)
-				mutex.Unlock()
 			}
+			mutex.Unlock()
 		}(i)
+
+		// If some gouroutine is already ended with error, returning this error
+		select {
+		case err := <-errCh:
+			cancel()
+			return nil, err
+		default:
+		}
 	}
 	wg.Wait()
 
@@ -138,7 +144,8 @@ func (w *StatsOfChangingUseCase) getAddressWithChanges(
 	// Making request to web api
 	trs, err := w.webAPI.GetTransactionsByBlockNumber(ctx, blockNumber)
 	if err != nil {
-		return nil, err
+		return nil,
+			fmt.Errorf("StatsOfChangingUseCase - getAddressWithChanges - w.webAPI.GetTransactionsByBlockNumber: %w", err)
 	}
 
 	// Calculating amount that the sender spent and receiver got
