@@ -7,7 +7,7 @@ api:
 
 http:
   port: ":8080"
-  timeout: 10s
+  timeout: 20s
 
 logger:
   logLevel: "debug"
