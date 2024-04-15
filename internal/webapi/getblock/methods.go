@@ -20,7 +20,11 @@ func isValidUrl(url string) bool {
 }
 
 // Trying making retry requests .
-func (w *StatsOfChangingWebAPI) retryRequest(ctx context.Context, body *bytes.Buffer, response interface{}) (err error) {
+func (w *StatsOfChangingWebAPI) retryRequest(
+	ctx context.Context,
+	body *bytes.Buffer,
+	response interface{},
+) (err error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, w.url, body)
 	if err != nil {
 		return fmt.Errorf("StatsOfChangingWebAPI - retryRequest: %w", err)
@@ -33,9 +37,9 @@ func (w *StatsOfChangingWebAPI) retryRequest(ctx context.Context, body *bytes.Bu
 
 		// If context is done, return error and decrease limiter counter
 		select {
-		case <-request.Context().Done():
+		case <-ctx.Done():
 			w.limiter.Rollback()
-			return request.Context().Err()
+			return ctx.Err()
 		default:
 		}
 
