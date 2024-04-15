@@ -2,6 +2,7 @@ package webapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,6 +26,14 @@ func isValidUrl(url string) bool {
 func (w *StatsOfChangingWebAPI) retryRequest(request *http.Request, response interface{}) (err error) {
 	for i := 0; i < _defaultMaxRetries; i++ {
 		w.Limiter.WaitForAvailability()
+
+		// If context is done, return error and decrease limiter counter
+		select {
+		case <-request.Context().Done():
+			w.Limiter.Rollback()
+			return request.Context().Err()
+		default:
+		}
 
 		resp, err := w.Client.Do(request)
 		if err != nil {
@@ -68,20 +77,19 @@ func getBlockByNumberBuildRequestBody(blockNumber *big.Int) (*bytes.Buffer, erro
 
 // Making request and getting slice of transactions.
 func (w *StatsOfChangingWebAPI) getTransactionsByBlockNumber(
+	ctx context.Context,
 	blockNumber *big.Int,
-	resCh chan<- []*entity.Transaction,
-	errCh chan<- error,
-) {
+) ([]*entity.Transaction, error) {
 	body, err := getBlockByNumberBuildRequestBody(blockNumber)
 	if err != nil {
-		errCh <- err
-		return
+		return nil,
+			fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - getBlockByNumberBuildRequestBody: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, w.URL, body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, w.URL, body)
 	if err != nil {
-		errCh <- err
-		return
+		return nil,
+			fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - http.NewRequestWithContext: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -89,8 +97,8 @@ func (w *StatsOfChangingWebAPI) getTransactionsByBlockNumber(
 	response := getBlockByNumberResponse{}
 
 	if err := w.retryRequest(req, &response); err != nil {
-		errCh <- err
-		return
+		return nil,
+			fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - w.retryRequest: %w", err)
 	}
 
 	res := make([]*entity.Transaction, len(response.Result.Transactions))
@@ -98,20 +106,20 @@ func (w *StatsOfChangingWebAPI) getTransactionsByBlockNumber(
 	for i, t := range response.Result.Transactions {
 		gas, err := hex2int(t.Gas)
 		if err != nil {
-			errCh <- err
-			return
+			return nil,
+				fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - hex2int: %w", err)
 		}
 
 		gasPrice, err := hex2int(t.GasPrice)
 		if err != nil {
-			errCh <- err
-			return
+			return nil,
+				fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - hex2int: %w", err)
 		}
 
 		value, err := hex2int(t.Value)
 		if err != nil {
-			errCh <- err
-			return
+			return nil,
+				fmt.Errorf("StatsOfChangingWebAPI - getTransactionsByBlockNumber - hex2int: %w", err)
 		}
 
 		res[i] = &entity.Transaction{
@@ -122,7 +130,8 @@ func (w *StatsOfChangingWebAPI) getTransactionsByBlockNumber(
 			Value:    value,
 		}
 	}
-	resCh <- res
+
+	return res, nil
 }
 
 // Building Request Body for eth_blockNumber request.
@@ -144,46 +153,36 @@ func blockNumberBuildRequestBody() (*bytes.Buffer, error) {
 
 // Making request and getting number of last block.
 func (w *StatsOfChangingWebAPI) getCurrentBlockNumber(
-	resCh chan<- *big.Int,
-	errCh chan<- error,
-) {
+	ctx context.Context,
+) (*big.Int, error) {
 	body, err := blockNumberBuildRequestBody()
 	if err != nil {
-		errCh <- err
-		return
+		return nil,
+			fmt.Errorf("StatsOfChangingWebAPI - getCurrentBlockNumber - blockNumberBuildRequestBody: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, w.URL, body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, w.URL, body)
 	if err != nil {
-		errCh <- err
-		return
+		return nil,
+			fmt.Errorf("StatsOfChangingWebAPI - getCurrentBlockNumber - http.NewRequestWithContext: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
-	w.Limiter.WaitForAvailability()
-
-	resp, err := w.Client.Do(req)
-	if err != nil {
-		errCh <- err
-		return
-	}
-	defer resp.Body.Close()
-
 	response := blockNumberResponse{}
 
 	if err := w.retryRequest(req, &response); err != nil {
-		errCh <- err
-		return
+		return nil,
+			fmt.Errorf("StatsOfChangingWebAPI - getCurrentBlockNumber - w.retryRequest: %w", err)
 	}
 
 	res, err := hex2int(response.Result)
 	if err != nil {
-		errCh <- err
-		return
+		return nil,
+			fmt.Errorf("StatsOfChangingWebAPI - getCurrentBlockNumber - hex2int: %w", err)
 	}
 
-	resCh <- res
+	return res, nil
 }
 
 func hex2int(s string) (*big.Int, error) {
