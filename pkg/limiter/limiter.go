@@ -41,9 +41,18 @@ func (r *RPSLimiter) WaitForAvailability() {
 			r.count++
 			r.mu.Unlock()
 			time.Sleep(time.Millisecond * 100)
+
 			break
 		}
 		r.mu.Unlock()
 		time.Sleep(time.Millisecond * 100)
 	}
+}
+
+func (r *RPSLimiter) Rollback() {
+	r.mu.Lock()
+	if r.count > 0 {
+		r.count--
+	}
+	r.mu.Unlock()
 }
