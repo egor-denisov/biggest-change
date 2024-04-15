@@ -36,46 +36,16 @@ func (w *StatsOfChangingWebAPI) GetTransactionsByBlockNumber(
 	ctx context.Context,
 	blockNumber *big.Int,
 ) ([]*entity.Transaction, error) {
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
+	ctx, cancel := context.WithTimeout(ctx, _defaultTimeout)
 	defer cancel()
 
-	resCh := make(chan []*entity.Transaction, 1)
-
-	errCh := make(chan error, 1)
-
-	go w.getTransactionsByBlockNumber(blockNumber, resCh, errCh)
-
-	select {
-	case <-ctxTimeout.Done():
-		return nil, entity.ErrProcessTimeout
-	case <-ctx.Done():
-		return nil, entity.ErrInternalServer
-	case err := <-errCh:
-		return nil, err
-	case res := <-resCh:
-		return res, nil
-	}
+	return w.getTransactionsByBlockNumber(ctx, blockNumber)
 }
 
 // Getting current block number from getblock.io.
 func (w *StatsOfChangingWebAPI) GetCurrentBlockNumber(ctx context.Context) (*big.Int, error) {
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
+	ctx, cancel := context.WithTimeout(ctx, _defaultTimeout)
 	defer cancel()
 
-	resCh := make(chan *big.Int, 1)
-
-	errCh := make(chan error, 1)
-
-	go w.getCurrentBlockNumber(resCh, errCh)
-
-	select {
-	case <-ctxTimeout.Done():
-		return nil, entity.ErrProcessTimeout
-	case <-ctx.Done():
-		return nil, entity.ErrInternalServer
-	case err := <-errCh:
-		return nil, err
-	case res := <-resCh:
-		return res, nil
-	}
+	return w.getCurrentBlockNumber(ctx)
 }
