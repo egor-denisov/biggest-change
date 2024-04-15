@@ -13,14 +13,22 @@ var testConfigStr = `
 app:
   name: "test-app"
   version: "1.0.0"
+  countOfBlocks: 100
+  maxGoroutines: 50
+  averageAddressesInBlock: 200
+  cacheSize: 100
 
 api:
   url: test-url
   rps: 60
+  timewindow: 1s
+  timeout: 5s
+  maxRetries: 5
+  timeBetweenRetries: 500ms
 
 http:
   port: ":8080"
-  timeout: "5s"
+  timeout: 5s
 
 logger:
   logLevel: "info"
@@ -29,8 +37,15 @@ logger:
 var testEnvStr = `
 APP_NAME=test-app
 APP_VERSION=1.0.0
+APP_COUNT_OF_BLOCKS=100
+APP_MAX_GOROUTINES=50
+APP_AVG_ADDRS=200
+APP_CACHE_SIZE=100
 API_URL=test-url
 API_RPS=60
+API_TIME_WINDOW_RPS=1s
+API_TIMEOUT=5s
+API_TIME_BETWEEN_RETRIES=500ms
 HTTP_PORT=:8080
 HTTP_TIMEOUT=5s
 LOG_LEVEL=info`
@@ -79,12 +94,20 @@ var tests_MustLoadPath = []struct {
 		envFile:    "",
 		expectedConfig: &Config{
 			App: App{
-				Name:    "biggest-change",
-				Version: "1.0.0",
+				Name:                    "biggest-change",
+				Version:                 "1.0.0",
+				CountOfBlocks:           100,
+				MaxGoroutines:           50,
+				AverageAddressesInBlock: 200,
+				CacheSize:               100,
 			},
 			API: API{
-				Url: "",
-				Rps: 60,
+				Url:                "",
+				Rps:                60,
+				TimeWindowRPS:      time.Second,
+				Timeout:            5 * time.Second,
+				MaxRetries:         5,
+				TimeBetweenRetries: 500 * time.Millisecond,
 			},
 			HTTP: HTTP{
 				Port:    ":8080",
@@ -101,12 +124,20 @@ var tests_MustLoadPath = []struct {
 		envFile:    "",
 		expectedConfig: &Config{
 			App: App{
-				Name:    "test-app",
-				Version: "1.0.0",
+				Name:                    "test-app",
+				Version:                 "1.0.0",
+				CountOfBlocks:           100,
+				MaxGoroutines:           50,
+				AverageAddressesInBlock: 200,
+				CacheSize:               100,
 			},
 			API: API{
-				Url: "test-url",
-				Rps: 60,
+				Url:                "test-url",
+				Rps:                60,
+				TimeWindowRPS:      time.Second,
+				Timeout:            5 * time.Second,
+				MaxRetries:         5,
+				TimeBetweenRetries: 500 * time.Millisecond,
 			},
 			HTTP: HTTP{
 				Port:    ":8080",
@@ -123,12 +154,20 @@ var tests_MustLoadPath = []struct {
 		envFile:    "APP_NAME:else-name",
 		expectedConfig: &Config{
 			App: App{
-				Name:    "else-name",
-				Version: "1.0.0",
+				Name:                    "else-name",
+				Version:                 "1.0.0",
+				CountOfBlocks:           100,
+				MaxGoroutines:           50,
+				AverageAddressesInBlock: 200,
+				CacheSize:               100,
 			},
 			API: API{
-				Url: "test-url",
-				Rps: 60,
+				Url:                "test-url",
+				Rps:                60,
+				TimeWindowRPS:      time.Second,
+				Timeout:            5 * time.Second,
+				MaxRetries:         5,
+				TimeBetweenRetries: 500 * time.Millisecond,
 			},
 			HTTP: HTTP{
 				Port:    ":8080",
@@ -145,12 +184,20 @@ var tests_MustLoadPath = []struct {
 		envFile:    testEnvStr,
 		expectedConfig: &Config{
 			App: App{
-				Name:    "else-name",
-				Version: "1.0.0",
+				Name:                    "else-name",
+				Version:                 "1.0.0",
+				CountOfBlocks:           100,
+				MaxGoroutines:           50,
+				AverageAddressesInBlock: 200,
+				CacheSize:               100,
 			},
 			API: API{
-				Url: "test-url",
-				Rps: 60,
+				Url:                "test-url",
+				Rps:                60,
+				TimeWindowRPS:      time.Second,
+				Timeout:            5 * time.Second,
+				MaxRetries:         5,
+				TimeBetweenRetries: 500 * time.Millisecond,
 			},
 			HTTP: HTTP{
 				Port:    ":8080",
