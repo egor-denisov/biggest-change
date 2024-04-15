@@ -26,7 +26,7 @@ type (
 	App struct {
 		Name                    string `env:"APP_NAME"            env-default:"biggest-change" yaml:"name"`
 		Version                 string `env:"APP_VERSION"         env-default:"1.0.0"          yaml:"version"`
-		DefaultCountOfBlocks    uint   `env:"APP_COUNT_OF_BLOCKS" env-default:"100"            yaml:"countOfBlocks"`
+		CountOfBlocks           uint   `env:"APP_COUNT_OF_BLOCKS" env-default:"100"            yaml:"countOfBlocks"`
 		MaxGoroutines           int    `env:"APP_MAX_GOROUTINES"  env-default:"50"             yaml:"maxGoroutines"`
 		AverageAddressesInBlock int    `env:"APP_AVG_ADDRS"       env-default:"200"            yaml:"averageAddressesInBlock"`
 		CacheSize               int    `env:"APP_CACHE_SIZE"      env-default:"100"            yaml:"cacheSize"`

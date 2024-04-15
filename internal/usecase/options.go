@@ -19,7 +19,7 @@ func AverageAddressCountInBlock(averageAddressCountInBlock int) Option {
 		s.averageAddressCountInBlock = averageAddressCountInBlock
 	}
 }
-func DefaultCountOfBlocks(countOfBlocks uint) Option {
+func CountOfBlocks(countOfBlocks uint) Option {
 	return func(s *StatsOfChangingUseCase) {
 		s.countOfBlocks = countOfBlocks
 	}

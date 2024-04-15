@@ -36,7 +36,7 @@ func New(
 		usecase.CacheSize(cfg.App.CacheSize),
 		usecase.MaxGoroutines(cfg.App.MaxGoroutines),
 		usecase.AverageAddressCountInBlock(cfg.App.AverageAddressesInBlock),
-		usecase.DefaultCountOfBlocks(cfg.App.DefaultCountOfBlocks),
+		usecase.CountOfBlocks(cfg.App.CountOfBlocks),
 	)
 
 	// Init http server
