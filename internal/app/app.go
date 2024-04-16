@@ -22,7 +22,7 @@ func New(
 ) *App {
 	// Web api
 	api := webapi.New(
-		cfg.API.Url,
+		cfg.API.URL,
 		webapi.RequestCountRPS(cfg.API.Rps),
 		webapi.TimeWindowRPS(cfg.API.TimeWindowRPS),
 		webapi.Timeout(cfg.API.Timeout),

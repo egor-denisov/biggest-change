@@ -1,9 +1,9 @@
 package webapi
 
 type request struct {
-	JsonRPC string        `json:"jsonrpc"`
+	JSONRPC string        `json:"jsonrpc"`
 	Method  string        `json:"method"`
-	Id      string        `json:"id"`
+	ID      string        `json:"id"`
 	Params  []interface{} `json:"params"`
 }
 

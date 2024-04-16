@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/assert"
 )
 
-var testConfigStr = `
+const testConfigStr = `
 app:
   name: "test-app"
   version: "1.0.0"
@@ -19,7 +19,7 @@ app:
   cacheSize: 100
 
 api:
-  url: test-url
+  url: test-URL
   rps: 60
   timewindow: 1s
   timeout: 5s
@@ -34,14 +34,14 @@ logger:
   logLevel: "info"
 `
 
-var testEnvStr = `
+const testEnvStr = `
 APP_NAME=test-app
 APP_VERSION=1.0.0
 APP_COUNT_OF_BLOCKS=100
 APP_MAX_GOROUTINES=50
 APP_AVG_ADDRS=200
 APP_CACHE_SIZE=100
-API_URL=test-url
+API_URL=test-URL
 API_RPS=60
 API_TIME_WINDOW_RPS=1s
 API_TIMEOUT=5s
@@ -51,7 +51,7 @@ HTTP_TIMEOUT=5s
 LOG_LEVEL=info`
 
 func Test_MustLoadPath_ExistentPath(t *testing.T) {
-	for _, test := range tests_MustLoadPath {
+	for _, test := range testsMustLoadPath {
 		t.Run(test.name, func(t *testing.T) {
 			// temp config.yml file
 			tempFileConfig, err := os.CreateTemp("", "config-*.yml")
@@ -60,7 +60,7 @@ func Test_MustLoadPath_ExistentPath(t *testing.T) {
 			}
 			defer os.Remove(tempFileConfig.Name())
 
-			_, err = tempFileConfig.Write([]byte(test.configFile))
+			_, err = tempFileConfig.WriteString(test.configFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -71,7 +71,7 @@ func Test_MustLoadPath_ExistentPath(t *testing.T) {
 			}
 			defer os.Remove(tempFileEnv.Name())
 
-			_, err = tempFileEnv.Write([]byte(test.envFile))
+			_, err = tempFileEnv.WriteString(test.envFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -82,7 +82,7 @@ func Test_MustLoadPath_ExistentPath(t *testing.T) {
 	}
 }
 
-var tests_MustLoadPath = []struct {
+var testsMustLoadPath = []struct {
 	name           string
 	configFile     string
 	envFile        string
@@ -102,7 +102,7 @@ var tests_MustLoadPath = []struct {
 				CacheSize:               100,
 			},
 			API: API{
-				Url:                "",
+				URL:                "",
 				Rps:                60,
 				TimeWindowRPS:      time.Second,
 				Timeout:            5 * time.Second,
@@ -132,7 +132,7 @@ var tests_MustLoadPath = []struct {
 				CacheSize:               100,
 			},
 			API: API{
-				Url:                "test-url",
+				URL:                "test-URL",
 				Rps:                60,
 				TimeWindowRPS:      time.Second,
 				Timeout:            5 * time.Second,
@@ -162,7 +162,7 @@ var tests_MustLoadPath = []struct {
 				CacheSize:               100,
 			},
 			API: API{
-				Url:                "test-url",
+				URL:                "test-URL",
 				Rps:                60,
 				TimeWindowRPS:      time.Second,
 				Timeout:            5 * time.Second,
@@ -192,7 +192,7 @@ var tests_MustLoadPath = []struct {
 				CacheSize:               100,
 			},
 			API: API{
-				Url:                "test-url",
+				URL:                "test-URL",
 				Rps:                60,
 				TimeWindowRPS:      time.Second,
 				Timeout:            5 * time.Second,
@@ -220,7 +220,21 @@ func Test_MustLoadPath_NonExistentPath(t *testing.T) {
 	MustLoadPath("non_existent_config.yml", "non_existent_env.env")
 }
 
-var tests_fetchConfigPath = []struct {
+func Test_fetchConfigPath(t *testing.T) {
+	for _, test := range testsFetchConfigPath {
+		t.Run(test.name, func(t *testing.T) {
+			os.Args = test.argsValue
+			t.Setenv("CONFIG_PATH", test.envValue)
+
+			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+			configPath := fetchConfigPath()
+
+			assert.Equal(t, test.expected, configPath)
+		})
+	}
+}
+
+var testsFetchConfigPath = []struct {
 	name      string
 	argsValue []string
 	envValue  string
@@ -244,18 +258,4 @@ var tests_fetchConfigPath = []struct {
 		envValue:  "",
 		expected:  "./test_config.yml",
 	},
-}
-
-func Test_fetchConfigPath(t *testing.T) {
-	for _, test := range tests_fetchConfigPath {
-		t.Run(test.name, func(t *testing.T) {
-			os.Args = test.argsValue
-			os.Setenv("CONFIG_PATH", test.envValue)
-
-			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-			configPath := fetchConfigPath()
-
-			assert.Equal(t, test.expected, configPath)
-		})
-	}
 }

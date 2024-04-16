@@ -16,7 +16,7 @@ import (
 var errSomethingWentWrong = errors.New("something went wrong")
 
 func Test_GetAddressWithBiggestChange(t *testing.T) {
-	for _, test := range tests_GetAddressWithBiggestChange {
+	for _, test := range testsGetAddressWithBiggestChange {
 		t.Run(test.name, func(t *testing.T) {
 			// Init Dependencies
 			c := gomock.NewController(t)
@@ -36,7 +36,7 @@ func Test_GetAddressWithBiggestChange(t *testing.T) {
 
 type mockBehavior func(m *mock.MockStatsOfChangingWebAPI, countOfBlocks uint)
 
-var tests_GetAddressWithBiggestChange = []struct {
+var testsGetAddressWithBiggestChange = []struct {
 	name           string
 	mockBehavior   mockBehavior
 	countOfBlocks  uint
@@ -45,7 +45,7 @@ var tests_GetAddressWithBiggestChange = []struct {
 }{
 	{
 		name: "Success - Single Block",
-		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, countOfBlocks uint) {
+		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, _ uint) {
 			m.EXPECT().GetCurrentBlockNumber(context.Background()).Return(big.NewInt(200), nil)
 			m.EXPECT().GetTransactionsByBlockNumber(gomock.Any(), big.NewInt(200)).Return([]*entity.Transaction{
 				{From: "0x1", To: "0x2", Value: big.NewInt(500), Gas: big.NewInt(50), GasPrice: big.NewInt(2)},
@@ -86,7 +86,7 @@ var tests_GetAddressWithBiggestChange = []struct {
 	},
 	{
 		name: "Zero Blocks",
-		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, countOfBlocks uint) {
+		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, _ uint) {
 			m.EXPECT().GetCurrentBlockNumber(context.Background()).Return(big.NewInt(200), nil)
 			for i := uint(0); i < _defaultCountOfBlocks; i++ {
 				blockNum := big.NewInt(200 - int64(i))
@@ -104,7 +104,7 @@ var tests_GetAddressWithBiggestChange = []struct {
 	},
 	{
 		name: "Error - Getting block number",
-		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, countOfBlocks uint) {
+		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, _ uint) {
 			m.EXPECT().GetCurrentBlockNumber(context.Background()).Return(nil, errSomethingWentWrong)
 		},
 		countOfBlocks:  1,
@@ -113,7 +113,7 @@ var tests_GetAddressWithBiggestChange = []struct {
 	},
 	{
 		name: "Error - Getting change map",
-		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, countOfBlocks uint) {
+		mockBehavior: func(m *mock.MockStatsOfChangingWebAPI, _ uint) {
 			m.EXPECT().GetCurrentBlockNumber(context.Background()).Return(big.NewInt(200), nil)
 			m.EXPECT().GetTransactionsByBlockNumber(gomock.Any(), big.NewInt(200)).Return(nil, errSomethingWentWrong)
 		},

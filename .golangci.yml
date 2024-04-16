@@ -62,6 +62,10 @@ linters:
     - gci
     - gofmt
     - gofumpt
+    - paralleltest
+    - gochecknoglobals
+    - exhaustruct
+    - varnamelen
 
 run:
   issues-exit-code: 1

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -15,7 +16,7 @@ import (
 )
 
 // Checking validity of url.
-func isValidUrl(url string) bool {
+func isValidURL(url string) bool {
 	return strings.HasPrefix(url, "https://go.getblock.io/")
 }
 
@@ -24,7 +25,7 @@ func (w *StatsOfChangingWebAPI) retryRequest(
 	ctx context.Context,
 	body *bytes.Buffer,
 	response interface{},
-) (err error) {
+) error {
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, w.url, body)
 	if err != nil {
 		return fmt.Errorf("StatsOfChangingWebAPI - retryRequest: %w", err)
@@ -39,13 +40,13 @@ func (w *StatsOfChangingWebAPI) retryRequest(
 		select {
 		case <-ctx.Done():
 			w.limiter.Rollback()
-			return ctx.Err()
+			return fmt.Errorf("retryRequest - ctx.Done: %w", ctx.Err())
 		default:
 		}
 
 		resp, err := w.client.Do(request)
 		if err != nil {
-			return err
+			return fmt.Errorf("retryRequest - w.client.Do - retry %d: %w", i+1, err)
 		}
 		defer resp.Body.Close()
 
@@ -59,25 +60,25 @@ func (w *StatsOfChangingWebAPI) retryRequest(
 		time.Sleep(w.timeBetweenRetries)
 	}
 
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return entity.ErrTooMuchRequestToService
 	}
 
-	return err
+	return fmt.Errorf("retryRequest: %w", err)
 }
 
 // Building Request Body for eth_getBlockByNumber request.
 func getBlockByNumberBuildRequestBody(blockNumber *big.Int) (*bytes.Buffer, error) {
 	data := request{
-		JsonRPC: "2.0",
+		JSONRPC: "2.0",
 		Method:  "eth_getBlockByNumber",
 		Params:  []interface{}{int2hex(blockNumber), true},
-		Id:      "getblock.io",
+		ID:      "getblock.io",
 	}
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getBlockByNumberBuildRequestBody - json.Marshal: %w", err)
 	}
 
 	return bytes.NewBuffer(jsonData), nil
@@ -137,15 +138,15 @@ func (w *StatsOfChangingWebAPI) getTransactionsByBlockNumber(
 // Building Request Body for eth_blockNumber request.
 func blockNumberBuildRequestBody() (*bytes.Buffer, error) {
 	data := request{
-		JsonRPC: "2.0",
+		JSONRPC: "2.0",
 		Method:  "eth_blockNumber",
 		Params:  []interface{}{},
-		Id:      "getblock.io",
+		ID:      "getblock.io",
 	}
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("blockNumberBuildRequestBody - json.Marshal: %w", err)
 	}
 
 	return bytes.NewBuffer(jsonData), nil

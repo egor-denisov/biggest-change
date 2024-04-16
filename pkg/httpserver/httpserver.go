@@ -3,6 +3,7 @@ package httpserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -64,7 +65,7 @@ func (s *Server) Run() error {
 
 	s.log.Info("http server started", slog.String("addr", l.Addr().String()))
 
-	if err := s.httpServer.Serve(l); err != nil && err != http.ErrServerClosed {
+	if err := s.httpServer.Serve(l); err != nil && errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -80,5 +81,5 @@ func (s *Server) Stop() error {
 	s.log.With(slog.String("op", op)).
 		Info("stopping http server", slog.String("port", s.httpServer.Addr))
 
-	return s.httpServer.Shutdown(ctx)
+	return fmt.Errorf("Stop - s.httpServer.Shutdown: %w", s.httpServer.Shutdown(ctx))
 }

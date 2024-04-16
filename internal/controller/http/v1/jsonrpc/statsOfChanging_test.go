@@ -21,7 +21,7 @@ import (
 )
 
 func Test_GetBiggestChange(t *testing.T) {
-	for _, test := range tests_GetBiggestChange {
+	for _, test := range testsGetBiggestChange {
 		t.Run(test.name, func(t *testing.T) {
 			// Init Dependencies
 			c := gomock.NewController(t)
@@ -34,14 +34,19 @@ func Test_GetBiggestChange(t *testing.T) {
 			rpcServer.RegisterCodec(json.NewCodec(), "application/json")
 
 			s := NewStatsOfChangingService(logger.SetupLogger("debug"), webapi)
-			rpcServer.RegisterService(s, "JsonRpc")
+			_ = rpcServer.RegisterService(s, "JsonRpc")
 
 			// Init Endpoint
 			r := gin.New()
 			r.POST("/", gin.WrapH(rpcServer))
 
 			// Create Request
-			req, err := http.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.requestBody))
+			req, err := http.NewRequestWithContext(
+				context.Background(),
+				http.MethodPost,
+				"/",
+				bytes.NewBufferString(test.requestBody),
+			)
 			assert.Equal(t, err, nil)
 
 			req.Header.Set("Content-Type", "application/json")
@@ -73,7 +78,7 @@ func getBodyRequestByCountOfBlock(countOfBlocks int) string {
 
 type mockBehavior func(m *mock.MockStatsOfChanging)
 
-var tests_GetBiggestChange = []struct {
+var testsGetBiggestChange = []struct {
 	name                 string
 	requestBody          string
 	mockBehavior         mockBehavior

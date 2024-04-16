@@ -18,7 +18,7 @@ import (
 var errSomethingWentWrong = errors.New("something went wrong")
 
 func Test_getBiggestChange(t *testing.T) {
-	for _, test := range tests_getBiggestChange {
+	for _, test := range testsGetBiggestChange {
 		t.Run(test.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
@@ -49,7 +49,7 @@ func Test_getBiggestChange(t *testing.T) {
 
 type mockBehavior func(m *mock.MockStatsOfChanging)
 
-var tests_getBiggestChange = []struct {
+var testsGetBiggestChange = []struct {
 	name                 string
 	mockBehavior         mockBehavior
 	query                string
@@ -91,7 +91,7 @@ var tests_getBiggestChange = []struct {
 	{
 		name:                 "Bad request",
 		query:                `?count_of_blocks=hello`,
-		mockBehavior:         func(m *mock.MockStatsOfChanging) {},
+		mockBehavior:         func(_ *mock.MockStatsOfChanging) {},
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedResponseBody: ``,
 	},

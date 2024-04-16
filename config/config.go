@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"time"
 
@@ -33,7 +32,7 @@ type (
 	}
 
 	API struct {
-		Url                string        `env:"API_URL"                  env-default:""      yaml:"url"`
+		URL                string        `env:"API_URL"                  env-default:""      yaml:"url"`
 		Rps                int           `env:"API_RPS"                  env-default:"60"    yaml:"rps"`
 		TimeWindowRPS      time.Duration `env:"API_TIME_WINDOW_RPS"      env-default:"1s"    yaml:"timewindow"`
 		Timeout            time.Duration `env:"API_TIMEOUT"              env-default:"5s"    yaml:"timeout"`
@@ -69,11 +68,9 @@ func MustLoadPath(configPath, envPath string) *Config {
 	var cfg Config
 
 	// try loading .env file
-	godotenv.Load(envPath)
+	_ = godotenv.Load(envPath)
 
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		b, _ := os.ReadFile(configPath)
-		fmt.Println(string(b))
 		panic("cannot read config: " + err.Error())
 	}
 
@@ -85,7 +82,6 @@ func fetchConfigPath() string {
 
 	flag.StringVar(&res, "config", "", "path to config file")
 	flag.Parse()
-	fmt.Println(res)
 
 	if res == "" {
 		res = os.Getenv("CONFIG_PATH")

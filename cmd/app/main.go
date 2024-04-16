@@ -7,7 +7,7 @@ import (
 
 	"github.com/egor-denisov/biggest-change/config"
 	app "github.com/egor-denisov/biggest-change/internal/app"
-	"github.com/egor-denisov/biggest-change/pkg/logger"
+	sl "github.com/egor-denisov/biggest-change/pkg/logger"
 )
 
 func main() {
@@ -15,10 +15,10 @@ func main() {
 	cfg := config.MustLoad()
 
 	// Init logger
-	log := logger.SetupLogger(cfg.Log.Level)
+	log := sl.SetupLogger(cfg.Log.Level)
 
 	// Init application
-	if cfg.API.Url == "" {
+	if cfg.API.URL == "" {
 		panic("app cannot be started without url")
 	}
 
@@ -37,7 +37,10 @@ func main() {
 
 	log.Info("Starting graceful shutdown")
 
-	application.HTTPServer.Stop()
+	err := application.HTTPServer.Stop()
+	if err != nil {
+		log.Error("Shutting down error: ", sl.Err(err))
+	}
 
 	log.Info("Gracefully stopped")
 }

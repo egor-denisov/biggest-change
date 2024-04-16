@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const _defaultLimiterCheckGap = 100
+
 type RPSLimiter struct {
 	mu        sync.Mutex
 	lastReset time.Time
@@ -40,12 +42,12 @@ func (r *RPSLimiter) WaitForAvailability() {
 		if r.count < r.cap {
 			r.count++
 			r.mu.Unlock()
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * _defaultLimiterCheckGap)
 
 			break
 		}
 		r.mu.Unlock()
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * _defaultLimiterCheckGap)
 	}
 }
 

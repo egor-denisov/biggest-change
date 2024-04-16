@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 
-	_ "github.com/egor-denisov/biggest-change/docs"
+	_ "github.com/egor-denisov/biggest-change/docs" //nolint:blank-imports //for working swagger documentation
 	"github.com/egor-denisov/biggest-change/internal/controller/http/v1/jsonrpc"
 	"github.com/egor-denisov/biggest-change/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -39,7 +39,7 @@ func NewRouter(handler *gin.Engine, l *slog.Logger, sc usecase.StatsOfChanging) 
 	// JSON RPC
 	rpcServer := rpc.NewServer()
 	rpcServer.RegisterCodec(json.NewCodec(), "application/json")
-	rpcServer.RegisterService(jsonrpc.NewStatsOfChangingService(l, sc), "JsonRpc")
+	_ = rpcServer.RegisterService(jsonrpc.NewStatsOfChangingService(l, sc), "JsonRpc")
 
 	handler.POST("/", gin.WrapH(rpcServer))
 

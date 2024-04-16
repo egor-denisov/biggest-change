@@ -30,7 +30,7 @@ type StatsOfChangingWebAPI struct {
 }
 
 func New(url string, opts ...Option) *StatsOfChangingWebAPI {
-	if !isValidUrl(url) {
+	if !isValidURL(url) {
 		panic("invalid getblock.io url: " + url)
 	}
 
